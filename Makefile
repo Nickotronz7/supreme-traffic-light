@@ -13,7 +13,7 @@ cleane:
 	rm init
 
 all: source/init.c source/cJSON.c
-	gcc -c source/init.c -o init.o
-	gcc -c source/cJSON.c -o cJSON.o
-	gcc init.o cJSON.o -o init
+	gcc -c source/init.c -o init.o -lrt
+	gcc -c source/cJSON.c -o cJSON.o -lrt
+	gcc init.o cJSON.o -o init -lrt
 

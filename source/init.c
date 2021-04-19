@@ -15,7 +15,14 @@
 
 #include "../headers/cJSON.h"
 
-void makeJson(int buffer_size);
+char *makeJson(int buffer_size);
+
+typedef struct
+{
+    char *json;
+} shared_json;
+
+shared_json *shared;
 
 int main(int argc, char **argv)
 {
@@ -35,43 +42,49 @@ int main(int argc, char **argv)
             printf("Argumentos invalidos");
     }
 
-    // char *buffer_name_tmp = (char *)malloc((strlen(buffer_name) + 1) * sizeof(char));
-    // strcpy(buffer_name_tmp, "/");
-    // strcat(buffer_name_tmp, buffer_name);
-    // strcpy(buffer_name, buffer_name_tmp);
-    // free(buffer_name_tmp);
+    char *buffer_name_tmp = (char *)malloc((strlen(buffer_name) + 1) * sizeof(char));
+    strcpy(buffer_name_tmp, "/");
+    strcat(buffer_name_tmp, buffer_name);
+    strcpy(buffer_name, buffer_name_tmp);
+    free(buffer_name_tmp);
 
-    // int shm_fd;
-    // char *shm_base;
-    // char *ptr;
+    int shm_fd;
+    char *shm_base;
+    char *ptr;
 
-    // shm_fd = shm_open(buffer_name, O_CREAT | O_RDONLY, S_IRUSR | S_IWUSR);
-    // if (shm_fd == -1)
-    // {
-    //     printf("prod: Shared memory failed: %s\n", strerror(errno));
-    //     exit(1);
-    // }
+    // len y=82x+415
+    char *json = makeJson(buffer_len);
 
-    // ftruncate(shm_fd, buffer_len);
+    buffer_len = (int)(strlen(json));
 
-    // shm_base = mmap(0, buffer_len, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
-    // if (shm_base == MAP_FAILED)
-    // {
-    //     printf("prod: Map failed: %s\n", strerror(errno));
-    //     // close and shm_unlink?
-    //     exit(1);
-    // }
+    shm_fd = shm_open(buffer_name,
+                      O_CREAT | O_RDONLY,
+                      S_IRUSR | S_IWUSR);
+    if (shm_fd == -1)
+    {
+        printf("prod: Shared memory failed: %s\n", strerror(errno));
+        exit(1);
+    }
 
-    // ftruncate(shm_fd, 3);
+    // shared->json = json;
+    // shared->json = (char*)malloc(buffer_len);
 
-    printf("%s\n", buffer_name);
+    ftruncate(shm_fd, sizeof(shared_json));
 
-    makeJson(buffer_len);
+    shared = (shared_json *)mmap(NULL, sizeof(shared_json),
+                                 PROT_READ | PROT_WRITE,
+                                 MAP_SHARED,
+                                 shm_fd, 0);
+
+    // printf("Size struct: %ld\n", sizeof(shared_json));
+    // printf("Size buffer: %ld\n", sizeof(shared->json));
+
+    shared->json = json;
 
     return 0;
 }
 
-void makeJson(int buffer_size)
+char *makeJson(int buffer_size)
 {
     cJSON *jsonRoot = NULL;
     cJSON *buffer = NULL;
@@ -107,5 +120,7 @@ void makeJson(int buffer_size)
     cJSON_AddNumberToObject(jsonRoot, "user_t", 0);
     cJSON_AddNumberToObject(jsonRoot, "kernel_t", 0);
 
-    printf("%s\n", cJSON_Print(jsonRoot));
+    // printf("%s\n", cJSON_Print(jsonRoot));
+
+    return cJSON_Print(jsonRoot);
 }
