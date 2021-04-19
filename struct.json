@@ -1,0 +1,20 @@
+{
+  "msg_tot": 0,
+  "buff": [
+      {
+          "id_prod":0,
+          "timestamp":0,
+          "num_msg":0,
+          "str_msg":"5 chars"
+      }
+  ],
+  "prod_tot": 0,
+  "prod_viv": 0,
+  "cons_tot": 0,
+  "cons_viv": 0,
+  "cons_key": 0,
+  "wait_t": 0,
+  "block_t": 0,
+  "user_t": 0,
+  "kernel_t": 0
+}
