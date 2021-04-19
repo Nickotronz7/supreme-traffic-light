@@ -15,9 +15,7 @@
 
 #include "../headers/cJSON.h"
 
-
 void makeJson(int buffer_size);
-
 
 int main(int argc, char **argv)
 {
@@ -87,15 +85,16 @@ void makeJson(int buffer_size)
     cJSON_AddNumberToObject(jsonRoot, "msg_tot", 0);
 
     buffer = cJSON_CreateArray();
+    cJSON *array_Element = NULL;
+    cJSON_AddItemToObject(jsonRoot, "buffer", buffer);
     for (size_t i = 0; i < buffer_size; i++)
     {
-        cJSON *array_Element = cJSON_CreateObject();
+        array_Element = cJSON_CreateObject();
+        cJSON_AddItemToArray(buffer, array_Element);
         cJSON_AddNumberToObject(array_Element, "id_prod", 0);
         cJSON_AddNumberToObject(array_Element, "timestamp", 0);
         cJSON_AddNumberToObject(array_Element, "num_msg", 0);
         cJSON_AddStringToObject(array_Element, "str_msg", "00000");
-        cJSON_AddItemToArray(buffer, array_Element);
-        free(array_Element);
     }
 
     cJSON_AddNumberToObject(jsonRoot, "prod_tot", 0);
