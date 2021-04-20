@@ -65,25 +65,25 @@ int main(int argc, char **argv)
 
     printf("%s\n", shm_base);
 
-    if (munmap(shm_base, buffer_len) == -1)
-    {
-        printf("cons: Unmap failed: %s\n", strerror(errno));
-        exit(1);
-    }
+    // if (munmap(shm_base, buffer_len) == -1)
+    // {
+    //     printf("cons: Fallo el unmap: %s\n", strerror(errno));
+    //     exit(1);
+    // }
 
-    /* close the shared memory segment as if it was a file */
-    if (close(shm_fd) == -1)
-    {
-        printf("cons: Close failed: %s\n", strerror(errno));
-        exit(1);
-    }
+    
+    // if (close(shm_fd) == -1)
+    // {
+    //     printf("cons: Fallo el cierre: %s\n", strerror(errno));
+    //     exit(1);
+    // }
 
-    /* remove the shared memory segment from the file system */
-    if (shm_unlink(buffer_name) == -1)
-    {
-        printf("cons: Error removing %s: %s\n", buffer_name, strerror(errno));
-        exit(1);
-    }
+    
+    // if (shm_unlink(buffer_name) == -1)
+    // {
+    //     printf("cons: Error al remover %s: %s\n", buffer_name, strerror(errno));
+    //     exit(1);
+    // }
 
     return 0;
 }

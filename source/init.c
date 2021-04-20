@@ -21,7 +21,7 @@ int main(int argc, char **argv)
 {
     char *buffer_name = NULL;
 
-    int buffer_len;
+    int buffer_len, buffer_len_init;
 
     int opt = 0;
 
@@ -35,6 +35,8 @@ int main(int argc, char **argv)
             printf("Argumentos invalidos");
     }
 
+    buffer_len_init = buffer_len;
+    
     char *buffer_name_tmp = (char *)malloc((strlen(buffer_name) + 1) * sizeof(char));
     strcpy(buffer_name_tmp, "/");
     strcat(buffer_name_tmp, buffer_name);
@@ -66,17 +68,17 @@ int main(int argc, char **argv)
     }
 
     json = shm_base;
-    json += sprintf(json, "%s", makeJson((buffer_len - 415) / 82));
+    json += sprintf(json, "%s", makeJson(buffer_len_init));
 
-    if (munmap(shm_base, buffer_len) == -1)
-    {
-        printf("Init: Fallo unmap: %s\n", strerror(errno));
-        exit(1);
-    }
+    // if (munmap(shm_base, buffer_len) == -1)
+    // {
+    //     printf("Init: Fallo unmap: %s\n", strerror(errno));
+    //     exit(1);
+    // }
 
-    if (close(shm_fd) == -1){
-        printf("Init: Error en el close: %s\n", strerror(errno));
-    }
+    // if (close(shm_fd) == -1){
+    //     printf("Init: Error en el close: %s\n", strerror(errno));
+    // }
 
     return 0;
 }
