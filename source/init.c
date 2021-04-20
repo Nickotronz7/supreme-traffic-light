@@ -17,13 +17,6 @@
 
 char *makeJson(int buffer_size);
 
-typedef struct
-{
-    char *json;
-} shared_json;
-
-shared_json *shared;
-
 int main(int argc, char **argv)
 {
     char *buffer_name = NULL;
@@ -48,38 +41,42 @@ int main(int argc, char **argv)
     strcpy(buffer_name, buffer_name_tmp);
     free(buffer_name_tmp);
 
-    int shm_fd;
-    char *shm_base;
-    char *ptr;
-
     // len y=82x+415
-    char *json = makeJson(buffer_len);
 
+    char *json = makeJson(buffer_len);
     buffer_len = (int)(strlen(json));
 
-    shm_fd = shm_open(buffer_name,
-                      O_CREAT | O_RDONLY,
-                      S_IRUSR | S_IWUSR);
+    int shm_fd;
+    char *shm_base;
+
+    shm_fd = shm_open(buffer_name, O_CREAT | O_RDWR, 0666);
     if (shm_fd == -1)
     {
-        printf("prod: Shared memory failed: %s\n", strerror(errno));
+        printf("Init: Fallo en memoria compartida: %s\n", strerror(errno));
         exit(1);
     }
 
-    // shared->json = json;
-    // shared->json = (char*)malloc(buffer_len);
+    ftruncate(shm_fd, buffer_len);
 
-    ftruncate(shm_fd, sizeof(shared_json));
+    shm_base = mmap(0, buffer_len, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    if (shm_base == MAP_FAILED)
+    {
+        printf("Init: Mapeo fallido: %s\n", strerror(errno));
+        exit(1);
+    }
 
-    shared = (shared_json *)mmap(NULL, sizeof(shared_json),
-                                 PROT_READ | PROT_WRITE,
-                                 MAP_SHARED,
-                                 shm_fd, 0);
+    json = shm_base;
+    json += sprintf(json, "%s", makeJson((buffer_len - 415) / 82));
 
-    // printf("Size struct: %ld\n", sizeof(shared_json));
-    // printf("Size buffer: %ld\n", sizeof(shared->json));
+    if (munmap(shm_base, buffer_len) == -1)
+    {
+        printf("Init: Fallo unmap: %s\n", strerror(errno));
+        exit(1);
+    }
 
-    shared->json = json;
+    if (close(shm_fd) == -1){
+        printf("Init: Error en el close: %s\n", strerror(errno));
+    }
 
     return 0;
 }
