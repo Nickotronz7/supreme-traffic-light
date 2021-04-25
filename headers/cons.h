@@ -16,7 +16,9 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <time.h>
+#include <stdbool.h>
 
 char *read_buffer(char *sh_json);
+bool included = false;
 
 #endif

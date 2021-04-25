@@ -80,6 +80,15 @@ int main(int argc, char **argv)
 char *read_buffer(char *sh_json)
 {
     cJSON *json = cJSON_Parse(sh_json);
+    if (!included)
+    {
+        cJSON_SetNumberValue(cJSON_GetObjectItem(json, "prod_viv"),
+                             cJSON_GetNumberValue(cJSON_GetObjectItem(
+                                 json, "prod_viv")) +
+                                 1);
+        included = true;
+    }
+
     int index, prod_id, timestamp, rnd_key, prod_viv, cons_viv;
     char *msg_read;
 
@@ -99,11 +108,22 @@ char *read_buffer(char *sh_json)
                                 index),
                             "timestamp"));
 
-    rnd_key = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "cons_key"));
+    rnd_key = cJSON_GetNumberValue(
+        cJSON_GetObjectItem(cJSON_GetArrayItem(
+                                cJSON_GetObjectItem(json,
+                                                    "buffer"),
+                                index),
+                            "num_mag"));
 
     prod_viv = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "prod_viv"));
 
     cons_viv = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "cons_viv"));
+
+    msg_read = cJSON_GetStringValue(
+        cJSON_GetObjectItem(cJSON_GetArrayItem(
+                                cJSON_GetObjectItem(json, "buffer"),
+                                index),
+                            "str_msg"));
 
     if (index + 1 == cJSON_GetNumberValue(cJSON_GetObjectItem(json,
                                                               "buffer_size")))
@@ -116,11 +136,11 @@ char *read_buffer(char *sh_json)
     }
 
     printf("{\n");
-    printf("    Identificador del Productor: %i,\n", prod_id);
-    printf("    Timestamp: %i,\n", timestamp);
-    printf("    Llave random: %i,\n", rnd_key);
+    printf("    Indice: %i,\n", index);
     printf("    Productores vivos: %i,\n", prod_viv);
     printf("    Consumidores vivos: %i\n", cons_viv);
+    printf("    Mensaje leido: %s,\n", msg_read);
+    printf("    Magic Number leido %i\n", rnd_key);
     printf("}\n");
     return cJSON_Print(json);
 }

@@ -59,6 +59,8 @@ int main(int argc, char **argv)
         exit(1);
     }
 
+    /* -- Meter cosa de semaforo :v -- */
+
     char *tmp_json = write_buffer(shm_base);
     buffer_len = (int)(strlen(tmp_json));
 
@@ -80,7 +82,17 @@ int main(int argc, char **argv)
 
 char *write_buffer(char *sh_json)
 {
+
     cJSON *json = cJSON_Parse(sh_json);
+    if (!included)
+    {
+        cJSON_SetNumberValue(cJSON_GetObjectItem(json, "prod_viv"),
+                             cJSON_GetNumberValue(cJSON_GetObjectItem(
+                                 json, "prod_viv")) +
+                                 1);
+        included = true;
+    }
+
     int index, id_prod, timestamp, num_msg, msg_tot, nxt_write;
     index = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "nxt_write"));
     msg_tot = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "msg_tot"));
@@ -88,8 +100,6 @@ char *write_buffer(char *sh_json)
     timestamp = time(NULL);
     num_msg = id_prod % 7;
     char *str_msg = "Holiguis";
-
-    /* -- Meter cosa de semaforo :v -- */
 
     cJSON_SetNumberValue(cJSON_GetObjectItem(cJSON_GetArrayItem(
                                                  cJSON_GetObjectItem(json,
@@ -130,6 +140,8 @@ char *write_buffer(char *sh_json)
     {
         cJSON_SetNumberValue(cJSON_GetObjectItem(json, "nxt_write"), index + 1);
     }
+
+    // imprimir mensaje
 
     return cJSON_Print(json);
 }

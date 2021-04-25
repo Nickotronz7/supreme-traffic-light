@@ -85,7 +85,7 @@ char *makeJson(int buffer_size)
         cJSON_AddItemToArray(buffer, array_Element);
         cJSON_AddNumberToObject(array_Element, "id_prod", 0);
         cJSON_AddNumberToObject(array_Element, "timestamp", 0);
-        cJSON_AddNumberToObject(array_Element, "num_msg", 0);
+        cJSON_AddNumberToObject(array_Element, "num_mag", 0);
         cJSON_AddStringToObject(array_Element, "str_msg", "00000");
     }
 
