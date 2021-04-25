@@ -38,7 +38,10 @@ int main(int argc, char* argv[]){
             MAP_SHARED,                 // Share among processes
             mem_desc, 0);   
 
-    sem_wait(sem);
+    if(sem_wait(sem) <0){
+        perror("error");
+        return;
+    }   
     shared->buff[0] =5;
     printf("hola a %d\n", shared->buff[0]);
     sleep(10);

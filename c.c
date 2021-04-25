@@ -10,7 +10,6 @@
 #include <fcntl.h>
 
 #define SEMAPHORES 1
-
 // New type definitions
 typedef struct {
     long timestamp;
@@ -25,33 +24,22 @@ int main(int argc, char* argv[]){
     int mem_desc; // shared memory descriptor
     int sem_desc;
     sem_t *sem;
+
     // Create shared mem in /dev/shm
     mem_desc = shm_open("/holis",
                   O_CREAT | O_RDWR,   // Create for R/W operations
                   S_IRUSR | S_IWUSR); // Give me R/W permission
     ftruncate(mem_desc, sizeof(PC_DATA));   // Set the shared memory size
-    //sem = sem_open ("/Semaf", O_CREAT | O_EXCL, 0660, 1);
-    if ((sem = sem_open ("/Semaf", O_CREAT, 0660, 1)) == SEM_FAILED) {
-        perror ("sem_open"); exit (1);
-    }
-
+    sem = sem_open ("/Semaf", O_CREAT | O_EXCL, 0644, 1);
+    
     // Map (or "attach") the shared memory to an address in my process
     shared = mmap(NULL, sizeof(PC_DATA), 
             PROT_READ | PROT_WRITE,     // Enable Read/Write access
             MAP_SHARED,                 // Share among processes
-            mem_desc, 0);
-   
+            mem_desc, 0);   
 
 
-    if(sem_wait(sem) == -1){
-        perror("sem_wait: sem");exit(1);
-    }   
-    
-    shared->buff[0] =10;
-    printf("hola a %d\n", shared->buff[0]);
-    sleep(10);
-
-    if (sem_post (sem) == -1) {
-	    perror ("sem_post: sem"); exit (1);}
     sem_unlink ("Semaf"); 
+
+    // sem_post(semaforo);
 }
