@@ -12,6 +12,8 @@ int main(int argc, char **argv)
 
     int opt = 0;
 
+    sem_t *sem;//semaforo
+
     while ((opt = getopt(argc, argv, "l:n:m:")) != -1)
     {
         switch (opt)
@@ -43,7 +45,11 @@ int main(int argc, char **argv)
 
     int shm_fd;
     char *shm_base;
-
+    //semaforo open 
+    if ((sem = sem_open ("/SemafProd", O_CREAT, 0660, 1)) == SEM_FAILED) {
+        perror ("sem_open"); exit (1);
+    }
+    //-------
     shm_fd = shm_open(buffer_name, O_RDWR, 0666);
     if (shm_fd == -1)
     {
@@ -58,7 +64,11 @@ int main(int argc, char **argv)
         printf("Cons: Fallo en el mapeo: %s\n", strerror(errno));
         exit(1);
     }
-
+//Semaforo espera o --
+    if(sem_wait(sem) == -1){
+        perror("sem_wait: sem");exit(1);
+    }   
+//zona critica
     char *tmp_json = write_buffer(shm_base);
     buffer_len = (int)(strlen(tmp_json));
 
@@ -74,7 +84,10 @@ int main(int argc, char **argv)
     {
         *(shm_base + i) = *(tmp_json + i);
     }
-
+//zona critica 
+//semafaro ++
+    if (sem_post (sem) == -1) {
+	    perror ("sem_post: sem"); exit (1);}
     return 0;
 }
 
