@@ -1,23 +1,5 @@
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <fcntl.h>
-#include <sys/shm.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <errno.h>
-
 #include "../headers/cJSON.h"
-
-cJSON *buffer_json = NULL;
-
-char *write_test(char *json);
+#include "../headers/prod.h"
 
 // l: largo del buffer
 // n: nombre del buffer
@@ -32,19 +14,28 @@ int main(int argc, char **argv)
 
     while ((opt = getopt(argc, argv, "l:n:m:")) != -1)
     {
-        if (opt == 'l')
+        switch (opt)
+        {
+        case 'l':
             buffer_len = atoi(optarg);
-        else if (opt == 'n')
+            break;
+
+        case 'n':
             buffer_name = optarg;
-        else if (opt == 'm')
+            break;
+
+        case 'm':
             dist_med = atoi(optarg);
-        else
-            printf("Argumentos invalidos");
+
+        default:
+            break;
+        }
     }
 
     buffer_len = (buffer_len * 82) + 415;
 
-    char *buffer_name_tmp = (char *)malloc((strlen(buffer_name) + 1) * sizeof(char));
+    char *buffer_name_tmp = (char *)malloc((strlen(buffer_name) + 1) *
+                                           sizeof(char));
     strcpy(buffer_name_tmp, "/");
     strcat(buffer_name_tmp, buffer_name);
     strcpy(buffer_name, buffer_name_tmp);
@@ -53,53 +44,92 @@ int main(int argc, char **argv)
     int shm_fd;
     char *shm_base;
 
-    shm_fd = shm_open(buffer_name, O_RDONLY, 0666);
+    shm_fd = shm_open(buffer_name, O_RDWR, 0666);
     if (shm_fd == -1)
     {
         printf("Cons: Error en memoria compartida: %s\n", strerror(errno));
         exit(1);
     }
 
-    shm_base = mmap(0, buffer_len, PROT_READ, MAP_SHARED, shm_fd, 0);
+    shm_base = mmap(0, buffer_len, PROT_READ | PROT_WRITE, MAP_SHARED,
+                    shm_fd, 0);
     if (shm_base == MAP_FAILED)
     {
         printf("Cons: Fallo en el mapeo: %s\n", strerror(errno));
         exit(1);
     }
 
-    // printf("%s\n", shm_base);
-    // shm_base = write_test(shm_base);
-    write_test(shm_base);
+    char *tmp_json = write_buffer(shm_base);
+    buffer_len = (int)(strlen(tmp_json));
 
-    // if (munmap(shm_base, buffer_len) == -1)
-    // {
-    //     printf("cons: Fallo el unmap: %s\n", strerror(errno));
-    //     exit(1);
-    // }
+    shm_base = mmap(0, buffer_len, PROT_READ | PROT_WRITE, MAP_SHARED,
+                    shm_fd, 0);
+    if (shm_base == MAP_FAILED)
+    {
+        printf("Cons: Fallo en el mapeo: %s\n", strerror(errno));
+        exit(1);
+    }
 
-    // if (close(shm_fd) == -1)
-    // {
-    //     printf("cons: Fallo el cierre: %s\n", strerror(errno));
-    //     exit(1);
-    // }
-
-    // if (shm_unlink(buffer_name) == -1)
-    // {
-    //     printf("cons: Error al remover %s: %s\n", buffer_name, strerror(errno));
-    //     exit(1);
-    // }
+    for (size_t i = 0; i < buffer_len; i++)
+    {
+        *(shm_base + i) = *(tmp_json + i);
+    }
 
     return 0;
 }
 
-char *write_test(char *json)
+char *write_buffer(char *sh_json)
 {
-    buffer_json = cJSON_Parse(json);
+    cJSON *json = cJSON_Parse(sh_json);
+    int index, id_prod, timestamp, num_msg, msg_tot, nxt_write;
+    index = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "nxt_write"));
+    msg_tot = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "msg_tot"));
+    id_prod = (int)getpid();
+    timestamp = time(NULL);
+    num_msg = id_prod % 7;
+    char *str_msg = "Holiguis";
 
-    // cJSON_AddNumberToObject(buffer_json, "msg_tot", 5);
+    /* -- Meter cosa de semaforo :v -- */
 
-    printf("%ld\n", strlen(cJSON_Print(buffer_json)));
-    printf("%s\n", cJSON_Print(buffer_json));
+    cJSON_SetNumberValue(cJSON_GetObjectItem(cJSON_GetArrayItem(
+                                                 cJSON_GetObjectItem(json,
+                                                                     "buffer"),
+                                                 index),
+                                             "id_prod"),
+                         id_prod);
 
-    return cJSON_Print(buffer_json);
+    cJSON_SetNumberValue(cJSON_GetObjectItem(cJSON_GetArrayItem(
+                                                 cJSON_GetObjectItem(json,
+                                                                     "buffer"),
+                                                 index),
+                                             "timestamp"),
+                         timestamp);
+
+    cJSON_SetNumberValue(cJSON_GetObjectItem(cJSON_GetArrayItem(
+                                                 cJSON_GetObjectItem(json,
+                                                                     "buffer"),
+                                                 index),
+                                             "num_msg"),
+                         num_msg);
+
+    cJSON_SetValuestring(cJSON_GetObjectItem(cJSON_GetArrayItem(
+                                                 cJSON_GetObjectItem(json,
+                                                                     "buffer"),
+                                                 index),
+                                             "str_msg"),
+                         str_msg);
+
+    cJSON_SetNumberValue(cJSON_GetObjectItem(json, "msg_tot"), msg_tot + 1);
+
+    if (index + 1 == cJSON_GetNumberValue(cJSON_GetObjectItem(json,
+                                                              "buffer_size")))
+    {
+        cJSON_SetNumberValue(cJSON_GetObjectItem(json, "nxt_write"), 0);
+    }
+    else
+    {
+        cJSON_SetNumberValue(cJSON_GetObjectItem(json, "nxt_write"), index + 1);
+    }
+
+    return cJSON_Print(json);
 }

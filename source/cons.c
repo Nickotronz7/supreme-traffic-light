@@ -1,19 +1,5 @@
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <fcntl.h>
-#include <sys/shm.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <errno.h>
-
 #include "../headers/cJSON.h"
+#include "../headers/cons.h"
 
 // l: largo del buffer
 // n: nombre del buffer
@@ -28,14 +14,22 @@ int main(int argc, char **argv)
 
     while ((opt = getopt(argc, argv, "l:n:m:")) != -1)
     {
-        if (opt == 'l')
+        switch (opt)
+        {
+        case 'l':
             buffer_len = atoi(optarg);
-        else if (opt == 'n')
+            break;
+
+        case 'n':
             buffer_name = optarg;
-        else if (opt == 'm')
+            break;
+
+        case 'm':
             dist_med = atoi(optarg);
-        else
-            printf("Argumentos invalidos");
+
+        default:
+            break;
+        }
     }
 
     buffer_len = (buffer_len * 82) + 415;
@@ -49,41 +43,84 @@ int main(int argc, char **argv)
     int shm_fd;
     char *shm_base;
 
-    shm_fd = shm_open(buffer_name, O_RDONLY, 0666);
+    shm_fd = shm_open(buffer_name, O_RDWR, 0666);
     if (shm_fd == -1)
     {
         printf("Cons: Error en memoria compartida: %s\n", strerror(errno));
         exit(1);
     }
 
-    shm_base = mmap(0, buffer_len, PROT_READ, MAP_SHARED, shm_fd, 0);
+    shm_base = mmap(0, buffer_len, PROT_READ | PROT_WRITE, MAP_SHARED,
+                    shm_fd, 0);
     if (shm_base == MAP_FAILED)
     {
         printf("Cons: Fallo en el mapeo: %s\n", strerror(errno));
         exit(1);
     }
 
-    printf("%s\n", shm_base);
+    char *tmp_json = read_buffer(shm_base);
+    buffer_len = (int)(strlen(tmp_json));
 
-    // if (munmap(shm_base, buffer_len) == -1)
-    // {
-    //     printf("cons: Fallo el unmap: %s\n", strerror(errno));
-    //     exit(1);
-    // }
+    shm_base = mmap(0, buffer_len, PROT_READ | PROT_WRITE, MAP_SHARED,
+                    shm_fd, 0);
+    if (shm_base == MAP_FAILED)
+    {
+        printf("Cons: Fallo en el mapeo: %s\n", strerror(errno));
+        exit(1);
+    }
 
-    
-    // if (close(shm_fd) == -1)
-    // {
-    //     printf("cons: Fallo el cierre: %s\n", strerror(errno));
-    //     exit(1);
-    // }
-
-    
-    // if (shm_unlink(buffer_name) == -1)
-    // {
-    //     printf("cons: Error al remover %s: %s\n", buffer_name, strerror(errno));
-    //     exit(1);
-    // }
+    for (size_t i = 0; i < buffer_len; i++)
+    {
+        *(shm_base + i) = *(tmp_json + i);
+    }
 
     return 0;
+}
+
+char *read_buffer(char *sh_json)
+{
+    cJSON *json = cJSON_Parse(sh_json);
+    int index, prod_id, timestamp, rnd_key, prod_viv, cons_viv;
+    char *msg_read;
+
+    /* -- Meter cosa de semaforo :v -- */
+
+    index = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "nxt_read"));
+    prod_id = cJSON_GetNumberValue(
+        cJSON_GetObjectItem(cJSON_GetArrayItem(
+                                cJSON_GetObjectItem(json,
+                                                    "buffer"),
+                                index),
+                            "id_prod"));
+    timestamp = cJSON_GetNumberValue(
+        cJSON_GetObjectItem(cJSON_GetArrayItem(
+                                cJSON_GetObjectItem(json,
+                                                    "buffer"),
+                                index),
+                            "timestamp"));
+
+    rnd_key = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "cons_key"));
+
+    prod_viv = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "prod_viv"));
+
+    cons_viv = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "cons_viv"));
+
+    if (index + 1 == cJSON_GetNumberValue(cJSON_GetObjectItem(json,
+                                                              "buffer_size")))
+    {
+        cJSON_SetNumberValue(cJSON_GetObjectItem(json, "nxt_read"), 0);
+    }
+    else
+    {
+        cJSON_SetNumberValue(cJSON_GetObjectItem(json, "nxt_read"), index + 1);
+    }
+
+    printf("{\n");
+    printf("    Identificador del Productor: %i,\n", prod_id);
+    printf("    Timestamp: %i,\n", timestamp);
+    printf("    Llave random: %i,\n", rnd_key);
+    printf("    Productores vivos: %i,\n", prod_viv);
+    printf("    Consumidores vivos: %i\n", cons_viv);
+    printf("}\n");
+    return cJSON_Print(json);
 }

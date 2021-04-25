@@ -1,21 +1,5 @@
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <fcntl.h>
-#include <sys/shm.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <errno.h>
-
 #include "../headers/cJSON.h"
-
-char *makeJson(int buffer_size);
+#include "../headers/init.h"
 
 int main(int argc, char **argv)
 {
@@ -27,26 +11,29 @@ int main(int argc, char **argv)
 
     while ((opt = getopt(argc, argv, "l:n:")) != -1)
     {
-        if (opt == 'l')
+        switch (opt)
+        {
+        case 'l':
             buffer_len = atoi(optarg);
-        else if (opt == 'n')
+            break;
+
+        case 'n':
             buffer_name = optarg;
-        else
-            printf("Argumentos invalidos");
+            break;
+
+        default:
+            break;
+        }
     }
 
-    buffer_len_init = buffer_len;
-    
+    // len y=82x+415
+    buffer_len_init = (82 * buffer_len) + 415;
+
     char *buffer_name_tmp = (char *)malloc((strlen(buffer_name) + 1) * sizeof(char));
     strcpy(buffer_name_tmp, "/");
     strcat(buffer_name_tmp, buffer_name);
     strcpy(buffer_name, buffer_name_tmp);
     free(buffer_name_tmp);
-
-    // len y=82x+415
-
-    char *json = makeJson(buffer_len);
-    buffer_len = (int)(strlen(json));
 
     int shm_fd;
     char *shm_base;
@@ -58,27 +45,17 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    ftruncate(shm_fd, buffer_len);
+    ftruncate(shm_fd, buffer_len_init);
 
-    shm_base = mmap(0, buffer_len, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    shm_base = mmap(0, buffer_len_init, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
     if (shm_base == MAP_FAILED)
     {
         printf("Init: Mapeo fallido: %s\n", strerror(errno));
         exit(1);
     }
 
-    json = shm_base;
-    json += sprintf(json, "%s", makeJson(buffer_len_init));
-
-    // if (munmap(shm_base, buffer_len) == -1)
-    // {
-    //     printf("Init: Fallo unmap: %s\n", strerror(errno));
-    //     exit(1);
-    // }
-
-    // if (close(shm_fd) == -1){
-    //     printf("Init: Error en el close: %s\n", strerror(errno));
-    // }
+    char *json = shm_base;
+    json += sprintf(json, "%s", makeJson(buffer_len));
 
     return 0;
 }
@@ -95,6 +72,9 @@ char *makeJson(int buffer_size)
     }
 
     cJSON_AddNumberToObject(jsonRoot, "msg_tot", 0);
+    cJSON_AddNumberToObject(jsonRoot, "nxt_write", 0);
+    cJSON_AddNumberToObject(jsonRoot, "nxt_read", 0);
+    cJSON_AddNumberToObject(jsonRoot, "buffer_size", buffer_size);
 
     buffer = cJSON_CreateArray();
     cJSON *array_Element = NULL;
@@ -118,8 +98,6 @@ char *makeJson(int buffer_size)
     cJSON_AddNumberToObject(jsonRoot, "block_t", 0);
     cJSON_AddNumberToObject(jsonRoot, "user_t", 0);
     cJSON_AddNumberToObject(jsonRoot, "kernel_t", 0);
-
-    // printf("%s\n", cJSON_Print(jsonRoot));
 
     return cJSON_Print(jsonRoot);
 }
