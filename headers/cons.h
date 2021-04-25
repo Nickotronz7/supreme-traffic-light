@@ -17,6 +17,7 @@
 #include <errno.h>
 #include <time.h>
 #include <stdbool.h>
+#include <semaphore.h>
 
 char *read_buffer(char *sh_json);
 bool included = false;
