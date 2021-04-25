@@ -8,7 +8,7 @@ int main(int argc, char **argv)
 {
     char *buffer_name = NULL;
 
-    int buffer_len, dist_med;
+    int buffer_len, dist_med,buffer_len_sem;
 
     int opt = 0;
 
@@ -33,7 +33,7 @@ int main(int argc, char **argv)
             break;
         }
     }
-
+    buffer_len_sem=buffer_len;
     buffer_len = (buffer_len * 82) + 415;
 
     char *buffer_name_tmp = (char *)malloc((strlen(buffer_name) + 1) *
@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     int shm_fd;
     char *shm_base;
     //semaforo open 
-    if ((sem = sem_open ("/SemafProd", O_CREAT, 0660, 1)) == SEM_FAILED) {
+    if ((sem = sem_open ("/SemafProd", O_CREAT, 0660, buffer_len_sem)) == SEM_FAILED) {
         perror ("sem_open"); exit (1);
     }
     //-------
