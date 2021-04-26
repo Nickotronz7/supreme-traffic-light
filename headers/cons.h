@@ -41,5 +41,6 @@ void kill();
 bool included = false;
 bool alive = true;
 int msg_cons, ac_wait_time, ac_wait_time_sem, t_ker;
+char *ra_muerte = NULL;
 
 #endif

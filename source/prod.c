@@ -132,13 +132,15 @@ char *write_buffer(char *sh_json)
         cJSON_SetNumberValue(cJSON_GetObjectItem(json, "nxt_write"), index + 1);
     }
 
+    msg_prod++;
+
     // imprimir mensaje
-    printf("%s    +---------------------------------+\n",KGRN);
-    printf("%s    Se a logrado una escritura en buffer!!\n",KGRN);
-    printf("%s    Escrito en: %s%i,\n",KGRN,KWHT, index);
-    printf("%s    Productores vivos: %s%i,\n",KGRN,KWHT, prod_viv);
-    printf("%s    Consumidores vivos: %s%i\n",KGRN,KWHT, cons_viv);
-    printf("%s    +---------------------------------+\n",KGRN);
+    printf("%s    +---------------------------------+\n", KGRN);
+    printf("%s    Se a logrado una escritura en buffer!!\n", KGRN);
+    printf("%s    Escrito en: %s%i,\n", KGRN, KWHT, index);
+    printf("%s    Productores vivos: %s%i,\n", KGRN, KWHT, prod_viv);
+    printf("%s    Consumidores vivos: %s%i\n", KGRN, KWHT, cons_viv);
+    printf("%s    +---------------------------------+\n", KGRN);
 
     return cJSON_Print(json);
 }
@@ -242,7 +244,7 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
     char key[3];
     while (alive)
     {
-        printf("%sPresione 'ENTER' para generar un mensaje \n",KCYN);
+        printf("%sPresione 'ENTER' para generar un mensaje \n", KCYN);
         scanf("%s", key);
 
         //semaforo open
@@ -338,9 +340,9 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
 
 void kill()
 {
-    printf("%sMe dio %sCOVID%s, me mori y esto fue lo que hice:\n\n",KGRN,KRED,KGRN);
-    printf("%smensajes producidos: %s%i\n",KGRN,KWHT ,msg_prod);
-    printf("%sAcumulado de tiempo esperado: %s%i\n",KGRN,KWHT, ac_wait_time);
-    printf("%sAcumulado de tiempo bloqueado por semaforos: %s%i\n",KGRN,KWHT, ac_wait_time_sem);
+    printf("%sMe dio %sCOVID%s, me mori y esto fue lo que hice:\n\n", KGRN, KRED, KGRN);
+    printf("%smensajes producidos: %s%i\n", KGRN, KWHT, msg_prod);
+    printf("%sAcumulado de tiempo esperado: %s%i\n", KGRN, KWHT, ac_wait_time);
+    printf("%sAcumulado de tiempo bloqueado por semaforos: %s%i\n", KGRN, KWHT, ac_wait_time_sem);
     exit(0);
 }
