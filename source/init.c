@@ -112,7 +112,8 @@ char *makeJson(int buffer_size)
     cJSON_AddNumberToObject(jsonRoot, "user_t", 0);
     cJSON_AddNumberToObject(jsonRoot, "kernel_t", 0);
 
-    printf("%s\n", cJSON_Print(jsonRoot));
+    //printf("%s\n", cJSON_Print(jsonRoot));
+    printf("%sSe ha inicializado el buffer con exito!!\n",KYEL);
 
     return cJSON_Print(jsonRoot);
 }

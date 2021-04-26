@@ -81,7 +81,7 @@ char *write_buffer(char *sh_json)
         included = true;
     }
 
-    int index, id_prod, num_msg, msg_tot, nxt_write;
+    int index, id_prod, num_msg, msg_tot, nxt_write, prod_viv, cons_viv;
     index = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "nxt_write"));
     msg_tot = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "msg_tot"));
     id_prod = (int)getpid();
@@ -89,6 +89,10 @@ char *write_buffer(char *sh_json)
     num_msg = id_prod % 7;
     char *str_msg = "Holiguis";
     char *timestamp_string = ctime(&timestamp);
+
+    prod_viv = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "prod_viv"));
+
+    cons_viv = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "cons_viv"));
 
     cJSON_SetNumberValue(cJSON_GetObjectItem(cJSON_GetArrayItem(
                                                  cJSON_GetObjectItem(json,
@@ -131,7 +135,12 @@ char *write_buffer(char *sh_json)
     }
 
     // imprimir mensaje
-    printf("%s\n\n", cJSON_Print(json));
+    printf("%s    +---------------------------------+\n",KGRN);
+    printf("%s    Se a logrado una escritura en buffer!!\n",KGRN);
+    printf("%s    Escrito en: %s%i,\n",KGRN,KWHT, index);
+    printf("%s    Productores vivos: %s%i,\n",KGRN,KWHT, prod_viv);
+    printf("%s    Consumidores vivos: %s%i\n",KGRN,KWHT, cons_viv);
+    printf("%s    +---------------------------------+\n",KGRN);
 
     return cJSON_Print(json);
 }
@@ -214,7 +223,7 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
     char key;
     while (alive)
     {
-        printf("Presione 'ENTER' para generar un mensaje \n");
+        printf("%sPresione 'ENTER' para generar un mensaje \n",KCYN);
         scanf("%c", &key);
 
         //semaforo open
