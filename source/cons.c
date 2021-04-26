@@ -206,11 +206,13 @@ void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
 void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
                  char *buffer_name, int buffer_len)
 {
-    char key;
+    char key[3];
     while (alive)
     {
-        printf("%sPresione 'ENTER' para consumir un mensaje \n",KBLU);
-        scanf("%c", &key);
+        printf("Presione 'ENTER' para generar un mensaje \n");
+        scanf("%s", key);
+        if (!strcmp(key, "end"))
+            kill();
 
         int shm_fd;
         char *shm_base;
@@ -272,4 +274,13 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
             exit(1);
         }
     }
+}
+
+void kill()
+{
+    printf("Me dio COVID, me mori y esto fue lo que hice:\n\n");
+    printf("mensajes producidos: %i\n", msg_prod);
+    printf("Acumulado de tiempo esperado: %i\n", ac_wait_time);
+    printf("Acumulado de tiempo bloqueado por semaforos: %i\n", ac_wait_time_sem);
+    exit(0);
 }

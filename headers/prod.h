@@ -15,8 +15,9 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <time.h>
-#include <stdbool.h>
 #include <semaphore.h>
+#include <string.h>
+#include <stdbool.h>
 
 #define KNRM  "\x1B[0m"
 #define KRED  "\x1B[31m"
@@ -30,9 +31,11 @@
 char *write_buffer(char *sh_json);
 
 void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
-                 char *buffer_name, int buffer_len,int dist_med);
-void manual_mode(sem_t *sem_p, sem_t *sem_c,int buffer_len_sem,
+               char *buffer_name, int buffer_len);
+void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
                  char *buffer_name, int buffer_len);
+
+void kill();
 
 bool included = false;
 bool alive = true;
