@@ -7,6 +7,12 @@
 // m: media de la distribucion
 int main(int argc, char **argv)
 {
+    // time_t begin, end;
+    // time(&begin);
+    // sleep(2);
+    // time(&end);
+    // time_t elapsed = end - begin; 
+
     char *buffer_name = NULL;
 
     int buffer_len, dist_med, buffer_len_sem, mode;
