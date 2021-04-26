@@ -26,6 +26,8 @@ void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
 void manual_mode(sem_t *sem_p, sem_t *sem_c,int buffer_len_sem,
                  char *buffer_name, int buffer_len);
 
+void kill();
+
 bool included = false;
 bool alive = true;
 int msg_prod, ac_wait_time, ac_wait_time_sem, t_ker;
