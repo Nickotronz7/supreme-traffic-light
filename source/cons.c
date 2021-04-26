@@ -48,7 +48,7 @@ int main(int argc, char **argv)
 
     if (mode)
     {
-        auto_mode(sem_p, sem_c, buffer_len_sem, buffer_name, buffer_len);
+        auto_mode(sem_p, sem_c, buffer_len_sem, buffer_name, buffer_len,dist_med);
     }
     else
     {
@@ -134,11 +134,13 @@ char *read_buffer(char *sh_json)
 void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
                char *buffer_name, int buffer_len,int dist_med)
 {
+    double tSleep;
     while (alive)
     {
         /* meta la probabilidad aqui */
-
-        sleep(funPoissonSingle(dist_med));
+        tSleep=funPoissonSingle(dist_med);
+        sleep(tSleep);
+        printf("El proceso durmio %f segundos", tSleep);
 
         int shm_fd;
         char *shm_base;
