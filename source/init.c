@@ -9,6 +9,8 @@ int main(int argc, char **argv)
 
     int opt = 0;
 
+    sem_t *sem_p, *sem_c; //semaforo
+
     while ((opt = getopt(argc, argv, "l:n:")) != -1)
     {
         switch (opt)
@@ -34,6 +36,17 @@ int main(int argc, char **argv)
     strcat(buffer_name_tmp, buffer_name);
     strcpy(buffer_name, buffer_name_tmp);
     free(buffer_name_tmp);
+
+    if ((sem_c = sem_open("/SemafCons", O_CREAT, 0660, 0)) == SEM_FAILED)
+    {
+        perror("sem_open");
+        exit(1);
+    }
+    if ((sem_p = sem_open("/SemafProd", O_CREAT, 0660, buffer_len)) == SEM_FAILED)
+    {
+        perror("sem_open");
+        exit(1);
+    }
 
     int shm_fd;
     char *shm_base;
@@ -84,9 +97,9 @@ char *makeJson(int buffer_size)
         array_Element = cJSON_CreateObject();
         cJSON_AddItemToArray(buffer, array_Element);
         cJSON_AddNumberToObject(array_Element, "id_prod", 0);
-        cJSON_AddNumberToObject(array_Element, "timestamp", 0);
+        cJSON_AddStringToObject(array_Element, "timestamp", "");
         cJSON_AddNumberToObject(array_Element, "num_mag", 0);
-        cJSON_AddStringToObject(array_Element, "str_msg", "00000");
+        cJSON_AddStringToObject(array_Element, "str_msg", "");
     }
 
     cJSON_AddNumberToObject(jsonRoot, "prod_tot", 0);
@@ -98,6 +111,8 @@ char *makeJson(int buffer_size)
     cJSON_AddNumberToObject(jsonRoot, "block_t", 0);
     cJSON_AddNumberToObject(jsonRoot, "user_t", 0);
     cJSON_AddNumberToObject(jsonRoot, "kernel_t", 0);
+
+    printf("%s\n", cJSON_Print(jsonRoot));
 
     return cJSON_Print(jsonRoot);
 }
