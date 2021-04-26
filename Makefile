@@ -13,13 +13,15 @@ init: source/init.c source/cJSON.c
 cons: source/cons.c source/cJSON.c
 	gcc -c source/cons.c -o cons.o -lrt
 	gcc -c source/cJSON.c -o cJSON.o -lrt
-	gcc cons.o cJSON.o -o cons -lrt -lpthread
+	gcc -c source/poisson.c -o poisson.o -lrt -lm
+	gcc cons.o cJSON.o poisson.o -o cons -lrt -lpthread -lm
 	rm *.o
 
 prod: source/prod.c source/cJSON.c
 	gcc -c source/prod.c -o prod.o -lrt 
 	gcc -c source/cJSON.c -o cJSON.o -lrt
-	gcc prod.o cJSON.o -o prod -lrt -lpthread
+	gcc -c source/expo.c -o expo.o -lrt -lm
+	gcc prod.o cJSON.o expo.o -o prod -lrt -lpthread -lm
 	rm *.o
 
 ter: source/terminator.c
@@ -30,10 +32,12 @@ ter: source/terminator.c
 all: source/prod.c source/init.c source/cons.c source/cJSON.c
 	gcc -c source/prod.c -o prod.o -lrt
 	gcc -c source/cJSON.c -o cJSON.o -lrt
-	gcc prod.o cJSON.o -o prod -lrt -lpthread
+	gcc -c source/expo.c -o expo.o -lrt -lm
+	gcc prod.o cJSON.o expo.o -o prod -lrt -lpthread -lm
 	gcc -c source/cons.c -o cons.o -lrt
 	gcc -c source/cJSON.c -o cJSON.o -lrt
-	gcc cons.o cJSON.o -o cons -lrt -lpthread
+	gcc -c source/poisson.c -o poisson.o -lrt -lm
+	gcc cons.o cJSON.o poisson.o -o cons -lrt -lpthread -lm
 	gcc -c source/init.c -o init.o -lrt
 	gcc -c source/cJSON.c -o cJSON.o -lrt
 	gcc init.o cJSON.o -o init -lrt -lpthread
