@@ -181,7 +181,7 @@ void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
             exit(1);
         }
         //zona critica
-        char *tmp_json, key;
+        char *tmp_json, *key;
         cJSON *json = cJSON_Parse(shm_base);
 
         if (cJSON_GetObjectItem(json, "covid"))
@@ -278,7 +278,12 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
         cJSON *json = cJSON_Parse(shm_base);
 
         if (cJSON_GetObjectItem(json, "covid"))
-            key = "end";
+        {
+            // key = "end";
+            key[0] = 'e';
+            key[1] = 'n';
+            key[2] = 'd';
+        }
 
         if (!strcmp(key, "end"))
         {

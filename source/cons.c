@@ -178,11 +178,11 @@ void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
         }
         //zona critica
 
-        char *tmp_json;
+        char *tmp_json, *key;
         cJSON *json = cJSON_Parse(shm_base);
 
         if (cJSON_GetObjectItem(json, "covid"))
-            char *key = "end";
+            key = "end";
 
         if (!strcmp(key, "end"))
         {
@@ -198,7 +198,7 @@ void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
         else
         {
             free(json);
-            tmp_json = write_buffer(shm_base);
+            tmp_json = read_buffer(shm_base);
             buffer_len = (int)(strlen(tmp_json));
         }
 
@@ -233,8 +233,6 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
     {
         printf("Presione 'ENTER' para generar un mensaje \n");
         scanf("%s", key);
-        if (!strcmp(key, "end"))
-            kill();
 
         int shm_fd;
         char *shm_base;
@@ -276,7 +274,12 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
         cJSON *json = cJSON_Parse(shm_base);
 
         if (cJSON_GetObjectItem(json, "covid"))
-            key = "end";
+        {
+            // key = "end";
+            key[0] = 'e';
+            key[1] = 'n';
+            key[2] = 'd';
+        }
 
         if (!strcmp(key, "end"))
         {
@@ -292,7 +295,7 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
         else
         {
             free(json);
-            tmp_json = write_buffer(shm_base);
+            tmp_json = read_buffer(shm_base);
             buffer_len = (int)(strlen(tmp_json));
         }
 
@@ -324,7 +327,9 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
 void kill()
 {
     printf("Me dio COVID, me mori y esto fue lo que hice:\n\n");
-    printf("mensajes producidos: %i\n", msg_prod);
+    // razon de morir
+    // print id
+    printf("mensajes consumidos: %i\n", msg_cons);
     printf("Acumulado de tiempo esperado: %i\n", ac_wait_time);
     printf("Acumulado de tiempo bloqueado por semaforos: %i\n", ac_wait_time_sem);
     exit(0);
