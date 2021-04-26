@@ -111,6 +111,7 @@ char *makeJson(int buffer_size)
     cJSON_AddNumberToObject(jsonRoot, "block_t", 0);
     cJSON_AddNumberToObject(jsonRoot, "user_t", 0);
     cJSON_AddNumberToObject(jsonRoot, "kernel_t", 0);
+    cJSON_AddNumberToObject(jsonRoot, "covid", 0);
 
     printf("%s\n", cJSON_Print(jsonRoot));
 
