@@ -31,7 +31,7 @@
 char *write_buffer(char *sh_json);
 
 void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
-               char *buffer_name, int buffer_len);
+               char *buffer_name, int buffer_len, int dist_med);
 void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
                  char *buffer_name, int buffer_len);
 

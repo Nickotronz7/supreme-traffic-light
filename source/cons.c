@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 
     if (mode)
     {
-        auto_mode(sem_p, sem_c, buffer_len_sem, buffer_name, buffer_len,dist_med);
+        auto_mode(sem_p, sem_c, buffer_len_sem, buffer_name, buffer_len, dist_med);
     }
     else
     {
@@ -125,27 +125,27 @@ char *read_buffer(char *sh_json)
     {
         cJSON_SetNumberValue(cJSON_GetObjectItem(json, "nxt_read"), index + 1);
     }
-    printf("%s    +---------------------------------+\n",KMAG);
-    printf("%s    Leido de: %s%i,\n",KMAG,KWHT, index);
-    printf("%s    Productores vivos: %s%i,\n",KMAG,KWHT, prod_viv);
-    printf("%s    Consumidores vivos: %s%i\n",KMAG,KWHT, cons_viv);
-    printf("%s    Mensaje leido: %s%s,\n",KMAG,KWHT, msg_read);
-    printf("%s    Magic Number leido %s%i\n",KMAG,KWHT, rnd_key);
-    printf("%s    Timestamp %s%s",KMAG,KWHT, timestamp);
-    printf("%s    +---------------------------------+\n",KMAG);
+    printf("%s    +---------------------------------+\n", KMAG);
+    printf("%s    Leido de: %s%i,\n", KMAG, KWHT, index);
+    printf("%s    Productores vivos: %s%i,\n", KMAG, KWHT, prod_viv);
+    printf("%s    Consumidores vivos: %s%i\n", KMAG, KWHT, cons_viv);
+    printf("%s    Mensaje leido: %s%s,\n", KMAG, KWHT, msg_read);
+    printf("%s    Magic Number leido %s%i\n", KMAG, KWHT, rnd_key);
+    printf("%s    Timestamp %s%s", KMAG, KWHT, timestamp);
+    printf("%s    +---------------------------------+\n", KMAG);
     return cJSON_Print(json);
 }
 
 void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
-               char *buffer_name, int buffer_len,int dist_med)
+               char *buffer_name, int buffer_len, int dist_med)
 {
     double tSleep;
     while (alive)
     {
         /* meta la probabilidad aqui */
-        tSleep=funPoissonSingle(dist_med);
+        tSleep = funPoissonSingle(dist_med);
         sleep(tSleep);
-        printf("%sEl proceso durmio %f segundos",KMAG, tSleep);
+        printf("%sEl proceso durmio %f segundos", KMAG, tSleep);
 
         int shm_fd;
         char *shm_base;
@@ -183,8 +183,30 @@ void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
             exit(1);
         }
         //zona critica
-        char *tmp_json = read_buffer(shm_base);
-        buffer_len = (int)(strlen(tmp_json));
+
+        char *tmp_json, *key;
+        cJSON *json = cJSON_Parse(shm_base);
+
+        if (cJSON_GetObjectItem(json, "covid"))
+            key = "end";
+
+        if (!strcmp(key, "end"))
+        {
+            alive = !alive;
+            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "cons_viv"),
+                                 (cJSON_GetNumberValue(
+                                     cJSON_GetObjectItem(json, "cons_viv"))) -
+                                     1);
+            tmp_json = cJSON_Print(json);
+            free(json);
+            buffer_len = (int)(strlen(tmp_json));
+        }
+        else
+        {
+            free(json);
+            tmp_json = read_buffer(shm_base);
+            buffer_len = (int)(strlen(tmp_json));
+        }
 
         shm_base = mmap(0, buffer_len, PROT_READ | PROT_WRITE, MAP_SHARED,
                         shm_fd, 0);
@@ -217,8 +239,6 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
     {
         printf("Presione 'ENTER' para generar un mensaje \n");
         scanf("%s", key);
-        if (!strcmp(key, "end"))
-            kill();
 
         int shm_fd;
         char *shm_base;
@@ -256,8 +276,34 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
             exit(1);
         }
         //zona critica
-        char *tmp_json = read_buffer(shm_base);
-        buffer_len = (int)(strlen(tmp_json));
+        char *tmp_json;
+        cJSON *json = cJSON_Parse(shm_base);
+
+        if (cJSON_GetObjectItem(json, "covid"))
+        {
+            // key = "end";
+            key[0] = 'e';
+            key[1] = 'n';
+            key[2] = 'd';
+        }
+
+        if (!strcmp(key, "end"))
+        {
+            alive = !alive;
+            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "cons_viv"),
+                                 (cJSON_GetNumberValue(
+                                     cJSON_GetObjectItem(json, "cons_viv"))) -
+                                     1);
+            tmp_json = cJSON_Print(json);
+            free(json);
+            buffer_len = (int)(strlen(tmp_json));
+        }
+        else
+        {
+            free(json);
+            tmp_json = read_buffer(shm_base);
+            buffer_len = (int)(strlen(tmp_json));
+        }
 
         shm_base = mmap(0, buffer_len, PROT_READ | PROT_WRITE, MAP_SHARED,
                         shm_fd, 0);
@@ -280,6 +326,8 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
             exit(1);
         }
     }
+    if (!alive)
+        kill();
 }
 
 void kill()

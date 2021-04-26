@@ -2,8 +2,6 @@
 #include "../headers/prod.h"
 #include "../headers/expo.h"
 
-
-
 // l: largo del buffer
 // n: nombre del buffer
 // m: media de la distribucion
@@ -52,7 +50,7 @@ int main(int argc, char **argv)
 
     if (mode)
     {
-        auto_mode(sem_p, sem_c, buffer_len_sem, buffer_name, buffer_len,dist_med);
+        auto_mode(sem_p, sem_c, buffer_len_sem, buffer_name, buffer_len, dist_med);
     }
     else
     {
@@ -146,13 +144,13 @@ char *write_buffer(char *sh_json)
 }
 
 void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
-               char *buffer_name, int buffer_len,int dist_med)
+               char *buffer_name, int buffer_len, int dist_med)
 {
     double tSleep;
     while (alive)
     {
         /* meta la probabilidad aqui */
-        tSleep=ran_expo(dist_med);
+        tSleep = ran_expo(dist_med);
         sleep(tSleep);
         printf("El proceso durmio %f segundos", tSleep);
         //semaforo open
@@ -192,8 +190,29 @@ void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
             exit(1);
         }
         //zona critica
-        char *tmp_json = write_buffer(shm_base);
-        buffer_len = (int)(strlen(tmp_json));
+        char *tmp_json, *key;
+        cJSON *json = cJSON_Parse(shm_base);
+
+        if (cJSON_GetObjectItem(json, "covid"))
+            key = "end";
+
+        if (!strcmp(key, "end"))
+        {
+            alive = !alive;
+            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "cons_viv"),
+                                 (cJSON_GetNumberValue(
+                                     cJSON_GetObjectItem(json, "cons_viv"))) -
+                                     1);
+            tmp_json = cJSON_Print(json);
+            free(json);
+            buffer_len = (int)(strlen(tmp_json));
+        }
+        else
+        {
+            free(json);
+            tmp_json = write_buffer(shm_base);
+            buffer_len = (int)(strlen(tmp_json));
+        }
 
         shm_base = mmap(0, buffer_len, PROT_READ | PROT_WRITE, MAP_SHARED,
                         shm_fd, 0);
@@ -225,8 +244,6 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
     {
         printf("%sPresione 'ENTER' para generar un mensaje \n",KCYN);
         scanf("%s", key);
-        if (!strcmp(key, "end"))
-            kill();
 
         //semaforo open
         int shm_fd;
@@ -265,8 +282,35 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
             exit(1);
         }
         //zona critica
-        char *tmp_json = write_buffer(shm_base);
-        buffer_len = (int)(strlen(tmp_json));
+
+        char *tmp_json;
+        cJSON *json = cJSON_Parse(shm_base);
+
+        if (cJSON_GetObjectItem(json, "covid"))
+        {
+            // key = "end";
+            key[0] = 'e';
+            key[1] = 'n';
+            key[2] = 'd';
+        }
+
+        if (!strcmp(key, "end"))
+        {
+            alive = !alive;
+            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "cons_viv"),
+                                 (cJSON_GetNumberValue(
+                                     cJSON_GetObjectItem(json, "cons_viv"))) -
+                                     1);
+            tmp_json = cJSON_Print(json);
+            free(json);
+            buffer_len = (int)(strlen(tmp_json));
+        }
+        else
+        {
+            free(json);
+            tmp_json = write_buffer(shm_base);
+            buffer_len = (int)(strlen(tmp_json));
+        }
 
         shm_base = mmap(0, buffer_len, PROT_READ | PROT_WRITE, MAP_SHARED,
                         shm_fd, 0);
