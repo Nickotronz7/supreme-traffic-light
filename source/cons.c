@@ -119,15 +119,14 @@ char *read_buffer(char *sh_json)
     {
         cJSON_SetNumberValue(cJSON_GetObjectItem(json, "nxt_read"), index + 1);
     }
-
-    printf("{\n");
-    printf("    Leido de: %i,\n", index);
-    printf("    Productores vivos: %i,\n", prod_viv);
-    printf("    Consumidores vivos: %i\n", cons_viv);
-    printf("    Mensaje leido: %s,\n", msg_read);
-    printf("    Magic Number leido %i\n", rnd_key);
-    printf("    Timestamp %s\n", timestamp);
-    printf("}\n");
+    printf("%s    +---------------------------------+\n",KMAG);
+    printf("%s    Leido de: %s%i,\n",KMAG,KWHT, index);
+    printf("%s    Productores vivos: %s%i,\n",KMAG,KWHT, prod_viv);
+    printf("%s    Consumidores vivos: %s%i\n",KMAG,KWHT, cons_viv);
+    printf("%s    Mensaje leido: %s%s,\n",KMAG,KWHT, msg_read);
+    printf("%s    Magic Number leido %s%i\n",KMAG,KWHT, rnd_key);
+    printf("%s    Timestamp %s%s",KMAG,KWHT, timestamp);
+    printf("%s    +---------------------------------+\n",KMAG);
     return cJSON_Print(json);
 }
 
@@ -140,7 +139,7 @@ void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
         /* meta la probabilidad aqui */
         tSleep=funPoissonSingle(dist_med);
         sleep(tSleep);
-        printf("El proceso durmio %f segundos", tSleep);
+        printf("%sEl proceso durmio %f segundos",KMAG, tSleep);
 
         int shm_fd;
         char *shm_base;
@@ -210,7 +209,7 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
     char key;
     while (alive)
     {
-        printf("Presione 'ENTER' para consumir un mensaje \n");
+        printf("%sPresione 'ENTER' para consumir un mensaje \n",KBLU);
         scanf("%c", &key);
 
         int shm_fd;
