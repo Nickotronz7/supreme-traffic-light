@@ -1,5 +1,6 @@
 #include "../headers/cJSON.h"
 #include "../headers/cons.h"
+#include "../headers/poisson.h"
 
 // l: largo del buffer
 // n: nombre del buffer
@@ -47,7 +48,7 @@ int main(int argc, char **argv)
 
     if (mode)
     {
-        auto_mode(sem_p, sem_c, buffer_len_sem, buffer_name, buffer_len);
+        auto_mode(sem_p, sem_c, buffer_len_sem, buffer_name, buffer_len,dist_med);
     }
     else
     {
@@ -118,24 +119,27 @@ char *read_buffer(char *sh_json)
     {
         cJSON_SetNumberValue(cJSON_GetObjectItem(json, "nxt_read"), index + 1);
     }
-
-    printf("{\n");
-    printf("    Leido de: %i,\n", index);
-    printf("    Productores vivos: %i,\n", prod_viv);
-    printf("    Consumidores vivos: %i\n", cons_viv);
-    printf("    Mensaje leido: %s,\n", msg_read);
-    printf("    Magic Number leido %i\n", rnd_key);
-    printf("    Timestamp %s\n", timestamp);
-    printf("}\n");
+    printf("%s    +---------------------------------+\n",KMAG);
+    printf("%s    Leido de: %s%i,\n",KMAG,KWHT, index);
+    printf("%s    Productores vivos: %s%i,\n",KMAG,KWHT, prod_viv);
+    printf("%s    Consumidores vivos: %s%i\n",KMAG,KWHT, cons_viv);
+    printf("%s    Mensaje leido: %s%s,\n",KMAG,KWHT, msg_read);
+    printf("%s    Magic Number leido %s%i\n",KMAG,KWHT, rnd_key);
+    printf("%s    Timestamp %s%s",KMAG,KWHT, timestamp);
+    printf("%s    +---------------------------------+\n",KMAG);
     return cJSON_Print(json);
 }
 
 void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
-               char *buffer_name, int buffer_len)
+               char *buffer_name, int buffer_len,int dist_med)
 {
+    double tSleep;
     while (alive)
     {
         /* meta la probabilidad aqui */
+        tSleep=funPoissonSingle(dist_med);
+        sleep(tSleep);
+        printf("%sEl proceso durmio %f segundos",KMAG, tSleep);
 
         int shm_fd;
         char *shm_base;

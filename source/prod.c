@@ -1,5 +1,8 @@
 #include "../headers/cJSON.h"
 #include "../headers/prod.h"
+#include "../headers/expo.h"
+
+
 
 // l: largo del buffer
 // n: nombre del buffer
@@ -49,7 +52,7 @@ int main(int argc, char **argv)
 
     if (mode)
     {
-        auto_mode(sem_p, sem_c, buffer_len_sem, buffer_name, buffer_len);
+        auto_mode(sem_p, sem_c, buffer_len_sem, buffer_name, buffer_len,dist_med);
     }
     else
     {
@@ -134,12 +137,15 @@ char *write_buffer(char *sh_json)
 }
 
 void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
-               char *buffer_name, int buffer_len)
+               char *buffer_name, int buffer_len,int dist_med)
 {
+    double tSleep;
     while (alive)
     {
         /* meta la probabilidad aqui */
-
+        tSleep=ran_expo(dist_med);
+        sleep(tSleep);
+        printf("El proceso durmio %f segundos", tSleep);
         //semaforo open
         int shm_fd;
         char *shm_base;
