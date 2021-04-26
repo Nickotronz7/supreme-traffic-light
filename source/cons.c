@@ -1,5 +1,6 @@
 #include "../headers/cJSON.h"
 #include "../headers/cons.h"
+#include "../headers/poisson.h"
 
 // l: largo del buffer
 // n: nombre del buffer
@@ -131,11 +132,13 @@ char *read_buffer(char *sh_json)
 }
 
 void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
-               char *buffer_name, int buffer_len)
+               char *buffer_name, int buffer_len,int dist_med)
 {
     while (alive)
     {
         /* meta la probabilidad aqui */
+
+        sleep(funPoissonSingle(dist_med));
 
         int shm_fd;
         char *shm_base;

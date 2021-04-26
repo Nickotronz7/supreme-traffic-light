@@ -1,6 +1,7 @@
 #include "../headers/cJSON.h"
 #include "../headers/prod.h"
 
+
 // l: largo del buffer
 // n: nombre del buffer
 // m: media de la distribucion
