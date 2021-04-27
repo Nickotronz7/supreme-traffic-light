@@ -113,9 +113,9 @@ int main(int argc, char **argv)
         sleep(1);
     }
 
-    printf("Mensaje totales %f\n", cJSON_GetNumberValue(
+    printf("%sMensaje totales %s%f\n",KRED,KWHT, cJSON_GetNumberValue(
                                        cJSON_GetObjectItem(json, "msg_tot")));
-    printf("Mensaje en el buffer\n");
+    printf("%sMensaje en el buffer\n",KRED);
 
     for (size_t i = 0; i < true_buffer_len; i++)
     {
@@ -123,25 +123,25 @@ int main(int argc, char **argv)
                                cJSON_GetObjectItem(json, "buffer"), i)));
     }
 
-    printf("Total de productores %f\n",
+    printf("%sTotal de productores %s%f\n",KRED,KWHT,
            cJSON_GetNumberValue(
                cJSON_GetObjectItem(json, "prod_tot")));
-    printf("Total de consumidores %f\n",
+    printf("%sTotal de consumidores %s%f\n",KRED,KWHT,
            cJSON_GetNumberValue(
                cJSON_GetObjectItem(json, "cons_tot")));
-    printf("Consumidores eliminados por llave %f\n",
+    printf("%sConsumidores eliminados por llave %s%f\n",KRED,KWHT,
            cJSON_GetNumberValue(
                cJSON_GetObjectItem(json, "cons_key")));
-    printf("Tiempo esperando total %f\n",
+    printf("%sTiempo esperando total %s%f\n",KRED,KWHT,
            cJSON_GetNumberValue(
                cJSON_GetObjectItem(json, "wait_t")));
-    printf("Tiempo bloqueado total %f\n",
+    printf("%sTiempo bloqueado total %s%f\n",KRED,KWHT,
            cJSON_GetNumberValue(
                cJSON_GetObjectItem(json, "block_t")));
-    printf("Tiempo de usuario total %f\n",
+    printf("%sTiempo de usuario total %s%f\n",KRED,KWHT,
            cJSON_GetNumberValue(
                cJSON_GetObjectItem(json, "user_t")));
-    printf("Tiempo de kernel total %f\n",
+    printf("%sTiempo de kernel total %s%f\n",KRED,KWHT,
            cJSON_GetNumberValue(
                cJSON_GetObjectItem(json, "kernel_t")));
 
