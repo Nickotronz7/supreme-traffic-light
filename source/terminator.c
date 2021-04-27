@@ -96,5 +96,10 @@ int main(int argc, char **argv)
         exit(1);
     }
 
+    //Mensajes totales, mensajes en el buffer, total de pro-ductores,  
+    //total  de  consumidores,  consumidores  eliminados  por  llave,  
+    //Tiempo  esperando  total,tiempo bloqueado total, tiempo de usuario total, 
+    //tiempo de kernel total.
+
     return 0;
 }
