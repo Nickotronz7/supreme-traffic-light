@@ -29,6 +29,7 @@ int main(int argc, char **argv)
 
     // len y=82x+415
     buffer_len_init = (82 * buffer_len) + 415;
+    int true_buffer_len = buffer_len;
 
     char *buffer_name_tmp = (char *)malloc((strlen(buffer_name) + 1) * sizeof(char));
     strcpy(buffer_name_tmp, "/");
@@ -116,7 +117,7 @@ int main(int argc, char **argv)
                                        cJSON_GetObjectItem(json, "msg_tot")));
     printf("Mensaje en el buffer\n");
 
-    for (size_t i = 0; i < buffer_len; i++)
+    for (size_t i = 0; i < true_buffer_len; i++)
     {
         printf("    %s\n", cJSON_Print(cJSON_GetArrayItem(
                                cJSON_GetObjectItem(json, "buffer"), i)));
