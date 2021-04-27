@@ -26,7 +26,8 @@ prod: source/prod.c source/cJSON.c
 
 ter: source/terminator.c
 	gcc -c source/terminator.c -o terminator.o -lrt
-	gcc terminator.o -o terminator -lrt -lpthread
+	gcc -c source/cJSON.c -o cJSON.o -lrt
+	gcc terminator.o cJSON.o -o terminator -lrt -lpthread
 	rm *.o
 
 all: source/prod.c source/init.c source/cons.c source/cJSON.c
@@ -42,5 +43,6 @@ all: source/prod.c source/init.c source/cons.c source/cJSON.c
 	gcc -c source/cJSON.c -o cJSON.o -lrt
 	gcc init.o cJSON.o -o init -lrt -lpthread
 	gcc -c source/terminator.c -o terminator.o -lrt
-	gcc terminator.o -o terminator -lrt -lpthread
+	gcc -c source/cJSON.c -o cJSON.o -lrt
+	gcc terminator.o cJSON.o -o terminator -lrt -lpthread
 	rm *.o

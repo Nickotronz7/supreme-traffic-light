@@ -245,7 +245,11 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
     while (alive)
     {
         printf("%sPresione 'ENTER' para generar un mensaje \n", KCYN);
+        clock_t begin = clock();
         scanf("%s", key);
+        clock_t end = clock();
+
+        ac_wait_time += (double)(end - begin) / CLOCKS_PER_SEC;
 
         //semaforo open
         int shm_fd;
@@ -277,12 +281,16 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
             printf("Prod: Fallo en el mapeo: %s\n", strerror(errno));
             exit(1);
         }
+        begin = clock();
         //Semaforo espera o --
         if (sem_wait(sem_p) == -1)
         {
             perror("sem_wait: sem");
             exit(1);
         }
+        end = clock();
+        ac_wait_time_sem += (double)(end - begin) / CLOCKS_PER_SEC;
+
         //zona critica
 
         char *tmp_json;
@@ -299,11 +307,23 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
         if (!strcmp(key, "end"))
         {
             alive = !alive;
-            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "cons_viv"),
+            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "prod_viv"),
                                  (cJSON_GetNumberValue(
-                                     cJSON_GetObjectItem(json, "cons_viv"))) -
+                                     cJSON_GetObjectItem(json, "prod_viv"))) -
                                      1);
+
+            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "wait_t"),
+                                 (cJSON_GetNumberValue(
+                                     cJSON_GetObjectItem(json, "wait_t"))) +
+                                     ac_wait_time);
+
+            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "block_t"),
+                                 (cJSON_GetNumberValue(
+                                     cJSON_GetObjectItem(json, "block_t"))) +
+                                     ac_wait_time_sem);
+
             tmp_json = cJSON_Print(json);
+
             free(json);
             buffer_len = (int)(strlen(tmp_json));
         }
@@ -340,9 +360,11 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
 
 void kill()
 {
-    printf("%sMe dio %sCOVID%s, me mori y esto fue lo que hice:\n\n", KGRN, KRED, KGRN);
+    printf("%sMe dio %sCOVID%s, me mori y esto fue lo que hice:\n\n",
+           KGRN, KRED, KGRN);
     printf("%smensajes producidos: %s%i\n", KGRN, KWHT, msg_prod);
-    printf("%sAcumulado de tiempo esperado: %s%i\n", KGRN, KWHT, ac_wait_time);
-    printf("%sAcumulado de tiempo bloqueado por semaforos: %s%i\n", KGRN, KWHT, ac_wait_time_sem);
+    printf("%sAcumulado de tiempo esperado: %s%f\n", KGRN, KWHT, ac_wait_time);
+    printf("%sAcumulado de tiempo bloqueado por semaforos: %s%f\n", KGRN, KWHT,
+           ac_wait_time_sem);
     exit(0);
 }

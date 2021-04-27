@@ -57,14 +57,26 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    ftruncate(shm_fd, buffer_len_init);
-
     shm_base = mmap(0, buffer_len_init, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
     if (shm_base == MAP_FAILED)
     {
         printf("Terr: Mapeo fallido: %s\n", strerror(errno));
         exit(1);
     }
+
+    while (cons + prod > 0)
+    {
+        if (sem_wait(sem_p) == -1 || sem_wait(sem_c) == -1)
+        {
+            perror("sem_wait: sem");
+            exit(1);
+        }
+        cJSON *json = cJSON_Parse(shm_base);
+        cons = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "cons_viv"));
+        prod = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "prod_viv"));
+    }
+
+    
 
     if (munmap(shm_base, buffer_len) == -1)
     {

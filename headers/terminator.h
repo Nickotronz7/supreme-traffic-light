@@ -16,5 +16,9 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <semaphore.h>
+#include "../headers/cJSON.h"
+
+int cons = 1;
+int prod = 1;
 
 #endif
