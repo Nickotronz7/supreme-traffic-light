@@ -245,6 +245,21 @@ void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
             tmp_json = cJSON_Print(json);
             buffer_len = (int)(strlen(tmp_json));
             ra_muerte = "covid por numero magico >:|";
+            alive = false;
+            shm_base = mmap(0, buffer_len, PROT_READ | PROT_WRITE, MAP_SHARED,
+                            shm_fd, 0);
+            if (shm_base == MAP_FAILED)
+            {
+                printf("Prod: Fallo en el mapeo: %s\n", strerror(errno));
+                exit(1);
+            }
+
+            for (size_t i = 0; i < buffer_len; i++)
+            {
+                *(shm_base + i) = *(tmp_json + i);
+            }
+
+            break;
         }
         else
         {
@@ -418,6 +433,21 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
             tmp_json = cJSON_Print(json);
             buffer_len = (int)(strlen(tmp_json));
             ra_muerte = "covid por numero magico >:|";
+            alive = false;
+            shm_base = mmap(0, buffer_len, PROT_READ | PROT_WRITE, MAP_SHARED,
+                            shm_fd, 0);
+            if (shm_base == MAP_FAILED)
+            {
+                printf("Prod: Fallo en el mapeo: %s\n", strerror(errno));
+                exit(1);
+            }
+
+            for (size_t i = 0; i < buffer_len; i++)
+            {
+                *(shm_base + i) = *(tmp_json + i);
+            }
+
+            break;
         }
         else
         {
