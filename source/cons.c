@@ -11,7 +11,7 @@ int main(int argc, char **argv)
     // time(&begin);
     // sleep(2);
     // time(&end);
-    // time_t elapsed = end - begin; 
+    // time_t elapsed = end - begin;
 
     char *buffer_name = NULL;
 
@@ -267,7 +267,10 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
     while (alive)
     {
         printf("Presione 'ENTER' para generar un mensaje \n");
+        clock_t begin = clock();
         scanf("%s", key);
+        clock_t end = clock();
+        ac_wait_time += (double)(end - begin) / CLOCKS_PER_SEC;
 
         int shm_fd;
         char *shm_base;
@@ -297,13 +300,20 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
             printf("Cons: Fallo en el mapeo: %s\n", strerror(errno));
             exit(1);
         }
-
+        begin = clock();
         //Semaforo espera o --
         if (sem_wait(sem_c) == -1)
         {
             perror("sem_wait: sem");
             exit(1);
         }
+
+        end = clock();
+        ac_wait_time_sem += (double)(end - begin) / CLOCKS_PER_SEC;
+        
+        printf("%f\n", ac_wait_time);
+        printf("%f\n", ac_wait_time_sem);
+
         //zona critica
         char *tmp_json;
         cJSON *json = cJSON_Parse(shm_base);
@@ -343,6 +353,10 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
                                  (cJSON_GetNumberValue(
                                      cJSON_GetObjectItem(json, "cons_viv"))) -
                                      1);
+            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "cons_key"),
+                                 (cJSON_GetNumberValue(
+                                     cJSON_GetObjectItem(json, "cons_key"))) +
+                                     1);
             tmp_json = cJSON_Print(json);
             buffer_len = (int)(strlen(tmp_json));
             ra_muerte = "covid por numero magico >:|";
@@ -380,11 +394,13 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
 
 void kill()
 {
-    printf("%sMe dio %sCOVID%s, me mori y esto fue lo que hice:\n\n", KMAG, KRED, KMAG);
+    printf("%sMe dio %sCOVID%s, me mori y esto fue lo que hice:\n\n",
+           KMAG, KRED, KMAG);
     printf("%sMe mori por: %s\n", KMAG, ra_muerte);
     printf("%sMi ID fue: %s%i\n", KMAG, KWHT, getpid());
     printf("%smensajes consumidos: %s%i\n", KMAG, KWHT, msg_cons);
-    printf("%sAcumulado de tiempo esperado: %s%i\n", KMAG, KWHT, ac_wait_time);
-    printf("%sAcumulado de tiempo bloqueado por semaforos: %s%i\n", KMAG, KWHT, ac_wait_time_sem);
+    printf("%sAcumulado de tiempo esperado: %s%f\n", KMAG, KWHT, ac_wait_time);
+    printf("%sAcumulado de tiempo bloqueado por semaforos: %s%f\n",
+           KMAG, KWHT, ac_wait_time_sem);
     exit(0);
 }

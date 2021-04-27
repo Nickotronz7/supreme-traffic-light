@@ -16,6 +16,7 @@
   "cons_tot": 0,
   "cons_viv": 0,
   "wait_t": 0,
+  "cons_key": 0,
   "block_t": 0,
   "user_t": 0,
   "kernel_t": 0
