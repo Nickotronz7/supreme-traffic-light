@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 
     char *buffer_name = NULL;
 
-    int buffer_len, dist_med, buffer_len_sem, mode;
+    int buffer_len, dist_med, buffer_len_sem,mode;
 
     int opt = 0;
 
@@ -42,7 +42,6 @@ int main(int argc, char **argv)
             break;
         }
     }
-
     buffer_len_sem = buffer_len;
     buffer_len = (buffer_len * 82) + 415;
 
@@ -51,7 +50,7 @@ int main(int argc, char **argv)
     strcat(buffer_name_tmp, buffer_name);
     strcpy(buffer_name, buffer_name_tmp);
     free(buffer_name_tmp);
-
+    
     if (mode)
     {
         auto_mode(sem_p, sem_c, buffer_len_sem, buffer_name, buffer_len, dist_med);
@@ -142,14 +141,13 @@ char *read_buffer(char *sh_json)
 void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
                char *buffer_name, int buffer_len, int dist_med)
 {
+    
     double tSleep;
     while (alive)
     {
-        /* meta la probabilidad aqui */
-        tSleep = funPoissonSingle(dist_med);
+        tSleep=funPoissonSingle(dist_med);
         sleep(tSleep);
-        printf("%sEl proceso durmio %f segundos", KMAG, tSleep);
-
+        printf("%sEl consumidor estuvo dormido %s%f\n",KMAG,KWHT,tSleep);
         int shm_fd;
         char *shm_base;
         //semaforo open
@@ -179,51 +177,70 @@ void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
             exit(1);
         }
 
+        //zona critica
+        char *tmp_json;
+        cJSON *json = cJSON_Parse(shm_base);
+        int index = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "nxt_read"));
+
+        if (cJSON_GetNumberValue(cJSON_GetObjectItem(json, "covid")))
+        {
+            printf("Se va a morir por puto y por covid\n");
+            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "cons_viv"), (cJSON_GetNumberValue(cJSON_GetObjectItem(json, "cons_viv"))) - 1);
+            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "wait_t"),
+                                 (cJSON_GetNumberValue(
+                                     cJSON_GetObjectItem(json, "wait_t"))) +
+                                     ac_wait_time);
+
+            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "block_t"),
+                                 (cJSON_GetNumberValue(
+                                     cJSON_GetObjectItem(json, "block_t"))) +
+                                     ac_wait_time_sem);
+            tmp_json = cJSON_Print(json);
+            buffer_len = (int)(strlen(tmp_json));
+            ra_muerte = "covid por terminator";
+            alive = false;
+            shm_base = mmap(0, buffer_len, PROT_READ | PROT_WRITE, MAP_SHARED,
+                            shm_fd, 0);
+            if (shm_base == MAP_FAILED)
+            {
+                printf("Prod: Fallo en el mapeo: %s\n", strerror(errno));
+                exit(1);
+            }
+
+            for (size_t i = 0; i < buffer_len; i++)
+            {
+                *(shm_base + i) = *(tmp_json + i);
+            }
+
+            break;
+        }
+
+        clock_t begin = clock();
         //Semaforo espera o --
         if (sem_wait(sem_c) == -1)
         {
             perror("sem_wait: sem");
             exit(1);
         }
-        //zona critica
 
-        char *tmp_json, key[3];
-        cJSON *json = cJSON_Parse(shm_base);
-
-        if (cJSON_GetObjectItem(json, "covid"))
-        {
-            // key = "end";
-            key[0] = 'e';
-            key[1] = 'n';
-            key[2] = 'd';
-            ra_muerte = "covid por terminator";
-        }
-
-        if (!strcmp(key, "end"))
+        clock_t end = clock();
+        ac_wait_time_sem += (double)(end - begin) / CLOCKS_PER_SEC;
+        
+        if (cJSON_GetNumberValue(
+                     cJSON_GetObjectItem(cJSON_GetArrayItem(
+                                             cJSON_GetObjectItem(json,
+                                                                 "buffer"),
+                                             index),
+                                         "num_mag")) == getpid() % 7)
         {
             alive = !alive;
             cJSON_SetNumberValue(cJSON_GetObjectItem(json, "cons_viv"),
                                  (cJSON_GetNumberValue(
                                      cJSON_GetObjectItem(json, "cons_viv"))) -
                                      1);
-            tmp_json = cJSON_Print(json);
-            buffer_len = (int)(strlen(tmp_json));
-            ra_muerte = "covid por manual :v";
-        }
-
-        int index = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "nxt_read"));
-
-        if (cJSON_GetNumberValue(
-                cJSON_GetObjectItem(cJSON_GetArrayItem(
-                                        cJSON_GetObjectItem(json,
-                                                            "buffer"),
-                                        index),
-                                    "num_mag")) == getpid() % 7)
-        {
-            alive = !alive;
-            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "cons_viv"),
+            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "cons_key"),
                                  (cJSON_GetNumberValue(
-                                     cJSON_GetObjectItem(json, "cons_viv"))) -
+                                     cJSON_GetObjectItem(json, "cons_key"))) +
                                      1);
             tmp_json = cJSON_Print(json);
             buffer_len = (int)(strlen(tmp_json));

@@ -65,6 +65,8 @@ int main(int argc, char **argv)
         exit(1);
     }
 
+    
+
     cJSON *json = NULL;
     json = cJSON_Parse(shm_base);
 
@@ -91,6 +93,18 @@ int main(int argc, char **argv)
 
     while ((cons + prod) > 0)
     {
+        printf("cons %i, prod %i\n", cons, prod);
+        // printf("%s\n", cJSON_Print(json));
+        if (sem_post(sem_p) == -1)
+        {
+            perror("sem_post: sem");
+            exit(1);
+        }
+         if (sem_post(sem_c) == -1)
+        {
+            perror("sem_post: sem");
+            exit(1);
+        }
         json = cJSON_Parse(shm_base);
 
         cons = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "cons_viv"));
