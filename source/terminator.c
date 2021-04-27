@@ -90,9 +90,6 @@ int main(int argc, char **argv)
 
     while ((cons + prod) > 0)
     {
-        printf("cons %i, prod %i\n", cons, prod);
-        // printf("%s\n", cJSON_Print(json));
-
         json = cJSON_Parse(shm_base);
 
         cons = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "cons_viv"));
@@ -101,27 +98,37 @@ int main(int argc, char **argv)
         sleep(1);
     }
 
-    // printf("Mensaje totales %f\n", cJSON_GetNumberValue(
-    //                                    cJSON_GetObjectItem(json, "msg_tot")));
-    // printf("Mensaje en el buffer\n");
+    printf("Mensaje totales %f\n", cJSON_GetNumberValue(
+                                       cJSON_GetObjectItem(json, "msg_tot")));
+    printf("Mensaje en el buffer\n");
 
-    // for (size_t i = 0; i < buffer_len; i++)
-    // {
-    //     printf("    %s\n", cJSON_Print(cJSON_GetArrayItem(
-    //                            cJSON_GetObjectItem(json, "buffer"), i)));
-    // }
+    for (size_t i = 0; i < buffer_len; i++)
+    {
+        printf("    %s\n", cJSON_Print(cJSON_GetArrayItem(
+                               cJSON_GetObjectItem(json, "buffer"), i)));
+    }
 
-    // printf("Total de productores %f\n",
-    //        cJSON_GetNumberValue(
-    //            cJSON_GetObjectItem(json, "prod_tot")));
-    // printf("Total de consumidores %f\n",
-    //        cJSON_GetNumberValue(
-    //            cJSON_GetObjectItem(json, "cons_tot")));
-    // printf("Consumidores eliminados por llave %f\n",
-    //        cJSON_GetNumberValue(
-    //            cJSON_GetObjectItem(json, "cons_key")));
-    // printf("Tiempo esperando total %i\n",
-    //        100);
+    printf("Total de productores %f\n",
+           cJSON_GetNumberValue(
+               cJSON_GetObjectItem(json, "prod_tot")));
+    printf("Total de consumidores %f\n",
+           cJSON_GetNumberValue(
+               cJSON_GetObjectItem(json, "cons_tot")));
+    printf("Consumidores eliminados por llave %f\n",
+           cJSON_GetNumberValue(
+               cJSON_GetObjectItem(json, "cons_key")));
+    printf("Tiempo esperando total %i\n",
+           cJSON_GetNumberValue(
+               cJSON_GetObjectItem(json, "wait_t")));
+    printf("Tiempo bloqueado total %i\n",
+           cJSON_GetNumberValue(
+               cJSON_GetObjectItem(json, "block_t")));
+    printf("Tiempo de usuario total %i\n",
+           cJSON_GetNumberValue(
+               cJSON_GetObjectItem(json, "user_t")));
+    printf("Tiempo de kernel total %i\n",
+           cJSON_GetNumberValue(
+               cJSON_GetObjectItem(json, "kernel_t")));
 
     if (munmap(shm_base, buffer_len) == -1)
     {
@@ -153,9 +160,9 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    //Mensajes totales, mensajes en el buffer, total de pro-ductores,  
-    //total  de  consumidores,  consumidores  eliminados  por  llave,  
-    //Tiempo  esperando  total,tiempo bloqueado total, tiempo de usuario total, 
+    //Mensajes totales, mensajes en el buffer, total de pro-ductores,
+    //total  de  consumidores,  consumidores  eliminados  por  llave,
+    //Tiempo  esperando  total,tiempo bloqueado total, tiempo de usuario total,
     //tiempo de kernel total.
 
     return 0;
