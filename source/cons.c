@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 
     char *buffer_name = NULL;
 
-    int buffer_len, dist_med, buffer_len_sem,mode;
+    int buffer_len, dist_med, buffer_len_sem, mode;
 
     int opt = 0;
 
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     strcat(buffer_name_tmp, buffer_name);
     strcpy(buffer_name, buffer_name_tmp);
     free(buffer_name_tmp);
-    
+
     if (mode)
     {
         auto_mode(sem_p, sem_c, buffer_len_sem, buffer_name, buffer_len, dist_med);
@@ -141,13 +141,13 @@ char *read_buffer(char *sh_json)
 void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
                char *buffer_name, int buffer_len, int dist_med)
 {
-    
+
     double tSleep;
     while (alive)
     {
-        tSleep=funPoissonSingle(dist_med);
+        tSleep = funPoissonSingle(dist_med);
         sleep(tSleep);
-        printf("%sEl consumidor estuvo dormido %s%f\n",KMAG,KWHT,tSleep);
+        printf("%sEl consumidor estuvo dormido %s%f\n", KMAG, KWHT, tSleep);
         int shm_fd;
         char *shm_base;
         //semaforo open
@@ -225,13 +225,13 @@ void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
 
         clock_t end = clock();
         ac_wait_time_sem += (double)(end - begin) / CLOCKS_PER_SEC;
-        
+
         if (cJSON_GetNumberValue(
-                     cJSON_GetObjectItem(cJSON_GetArrayItem(
-                                             cJSON_GetObjectItem(json,
-                                                                 "buffer"),
-                                             index),
-                                         "num_mag")) == getpid() % 7)
+                cJSON_GetObjectItem(cJSON_GetArrayItem(
+                                        cJSON_GetObjectItem(json,
+                                                            "buffer"),
+                                        index),
+                                    "num_mag")) == getpid() % 7)
         {
             alive = !alive;
             cJSON_SetNumberValue(cJSON_GetObjectItem(json, "cons_viv"),
@@ -242,6 +242,22 @@ void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
                                  (cJSON_GetNumberValue(
                                      cJSON_GetObjectItem(json, "cons_key"))) +
                                      1);
+
+            if (!included)
+            {
+                cJSON_SetNumberValue(cJSON_GetObjectItem(json, "cons_tot"),
+                                     cJSON_GetNumberValue(cJSON_GetObjectItem(
+                                         json, "cons_tot")) +
+                                         1);
+
+                cJSON_SetNumberValue(cJSON_GetObjectItem(json, "cons_viv"),
+                                     cJSON_GetNumberValue(cJSON_GetObjectItem(
+                                         json, "cons_viv")) +
+                                         1);
+
+                included = true;
+            }
+
             tmp_json = cJSON_Print(json);
             buffer_len = (int)(strlen(tmp_json));
             ra_muerte = "covid por numero magico >:|";
@@ -430,6 +446,22 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
                                  (cJSON_GetNumberValue(
                                      cJSON_GetObjectItem(json, "cons_key"))) +
                                      1);
+
+            if (!included)
+            {
+                cJSON_SetNumberValue(cJSON_GetObjectItem(json, "cons_tot"),
+                                     cJSON_GetNumberValue(cJSON_GetObjectItem(
+                                         json, "cons_tot")) +
+                                         1);
+
+                cJSON_SetNumberValue(cJSON_GetObjectItem(json, "cons_viv"),
+                                     cJSON_GetNumberValue(cJSON_GetObjectItem(
+                                         json, "cons_viv")) +
+                                         1);
+
+                included = true;
+            }
+
             tmp_json = cJSON_Print(json);
             buffer_len = (int)(strlen(tmp_json));
             ra_muerte = "covid por numero magico >:|";
