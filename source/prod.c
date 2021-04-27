@@ -1,7 +1,7 @@
 #include "../headers/cJSON.h"
 #include "../headers/prod.h"
 #include "../headers/expo.h"
-
+  
 // l: largo del buffer
 // n: nombre del buffer
 // m: media de la distribucion
@@ -151,10 +151,9 @@ void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
     double tSleep;
     while (alive)
     {
-        /* meta la probabilidad aqui */
         tSleep = ran_expo(dist_med);
+        printf("%sEl productor estuvo dormido %s%f\n",KMAG,KWHT,tSleep);
         sleep(tSleep);
-        printf("El proceso durmio %f segundos", tSleep);
         //semaforo open
         int shm_fd;
         char *shm_base;
@@ -185,36 +184,55 @@ void auto_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
             printf("Prod: Fallo en el mapeo: %s\n", strerror(errno));
             exit(1);
         }
+
+        char *tmp_json;
+        cJSON *json = cJSON_Parse(shm_base);
+
+        if (cJSON_GetNumberValue(cJSON_GetObjectItem(json, "covid")))
+        {
+            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "prod_viv"), (cJSON_GetNumberValue(cJSON_GetObjectItem(json, "prod_viv"))) - 1);
+            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "wait_t"),
+                                 (cJSON_GetNumberValue(
+                                     cJSON_GetObjectItem(json, "wait_t"))) +
+                                     ac_wait_time);
+
+            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "block_t"),
+                                 (cJSON_GetNumberValue(
+                                     cJSON_GetObjectItem(json, "block_t"))) +
+                                     ac_wait_time_sem);
+            tmp_json = cJSON_Print(json);
+            buffer_len = (int)(strlen(tmp_json));
+            alive = false;
+
+            shm_base = mmap(0, buffer_len, PROT_READ | PROT_WRITE, MAP_SHARED,
+                            shm_fd, 0);
+            if (shm_base == MAP_FAILED)
+            {
+                printf("Prod: Fallo en el mapeo: %s\n", strerror(errno));
+                exit(1);
+            }
+
+            for (size_t i = 0; i < buffer_len; i++)
+            {
+                *(shm_base + i) = *(tmp_json + i);
+            }
+
+            break;
+        }
+
+        //zona critica
+        clock_t begin = clock();
         //Semaforo espera o --
         if (sem_wait(sem_p) == -1)
         {
             perror("sem_wait: sem");
             exit(1);
         }
-        //zona critica
-        char *tmp_json, *key;
-        cJSON *json = cJSON_Parse(shm_base);
-
-        if (cJSON_GetObjectItem(json, "covid"))
-            key = "end";
-
-        if (!strcmp(key, "end"))
-        {
-            alive = !alive;
-            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "cons_viv"),
-                                 (cJSON_GetNumberValue(
-                                     cJSON_GetObjectItem(json, "cons_viv"))) -
-                                     1);
-            tmp_json = cJSON_Print(json);
-            free(json);
-            buffer_len = (int)(strlen(tmp_json));
-        }
-        else
-        {
-            free(json);
-            tmp_json = write_buffer(shm_base);
-            buffer_len = (int)(strlen(tmp_json));
-        }
+        clock_t end = clock();
+        ac_wait_time_sem += (double)(end - begin) / CLOCKS_PER_SEC;
+ 
+        tmp_json = write_buffer(shm_base);
+        buffer_len = (int)(strlen(tmp_json));
 
         shm_base = mmap(0, buffer_len, PROT_READ | PROT_WRITE, MAP_SHARED,
                         shm_fd, 0);
