@@ -281,6 +281,43 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
             printf("Prod: Fallo en el mapeo: %s\n", strerror(errno));
             exit(1);
         }
+
+        char *tmp_json;
+        cJSON *json = cJSON_Parse(shm_base);
+
+        if (cJSON_GetNumberValue(cJSON_GetObjectItem(json, "covid")))
+        {
+            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "prod_viv"), (cJSON_GetNumberValue(cJSON_GetObjectItem(json, "prod_viv"))) - 1);
+            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "wait_t"),
+                                 (cJSON_GetNumberValue(
+                                     cJSON_GetObjectItem(json, "wait_t"))) +
+                                     ac_wait_time);
+
+            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "block_t"),
+                                 (cJSON_GetNumberValue(
+                                     cJSON_GetObjectItem(json, "block_t"))) +
+                                     ac_wait_time_sem);
+            tmp_json = cJSON_Print(json);
+            buffer_len = (int)(strlen(tmp_json));
+            alive = false;
+
+            shm_base = mmap(0, buffer_len, PROT_READ | PROT_WRITE, MAP_SHARED,
+                            shm_fd, 0);
+            if (shm_base == MAP_FAILED)
+            {
+                printf("Prod: Fallo en el mapeo: %s\n", strerror(errno));
+                exit(1);
+            }
+
+            for (size_t i = 0; i < buffer_len; i++)
+            {
+                *(shm_base + i) = *(tmp_json + i);
+            }
+
+            break;
+        }
+
+        //zona critica
         begin = clock();
         //Semaforo espera o --
         if (sem_wait(sem_p) == -1)
@@ -291,27 +328,9 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
         end = clock();
         ac_wait_time_sem += (double)(end - begin) / CLOCKS_PER_SEC;
 
-        //zona critica
-
-        char *tmp_json;
-        cJSON *json = cJSON_Parse(shm_base);
-
-        if (cJSON_GetObjectItem(json, "covid"))
-        {
-            // key = "end";
-            key[0] = 'e';
-            key[1] = 'n';
-            key[2] = 'd';
-        }
-
         if (!strcmp(key, "end"))
         {
-            alive = !alive;
-            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "prod_viv"),
-                                 (cJSON_GetNumberValue(
-                                     cJSON_GetObjectItem(json, "prod_viv"))) -
-                                     1);
-
+            cJSON_SetNumberValue(cJSON_GetObjectItem(json, "prod_viv"), (cJSON_GetNumberValue(cJSON_GetObjectItem(json, "prod_viv"))) - 1);
             cJSON_SetNumberValue(cJSON_GetObjectItem(json, "wait_t"),
                                  (cJSON_GetNumberValue(
                                      cJSON_GetObjectItem(json, "wait_t"))) +
@@ -321,15 +340,12 @@ void manual_mode(sem_t *sem_p, sem_t *sem_c, int buffer_len_sem,
                                  (cJSON_GetNumberValue(
                                      cJSON_GetObjectItem(json, "block_t"))) +
                                      ac_wait_time_sem);
-
             tmp_json = cJSON_Print(json);
-
-            free(json);
             buffer_len = (int)(strlen(tmp_json));
+            alive = false;
         }
         else
         {
-            free(json);
             tmp_json = write_buffer(shm_base);
             buffer_len = (int)(strlen(tmp_json));
         }

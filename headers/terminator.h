@@ -18,7 +18,7 @@
 #include <semaphore.h>
 #include "../headers/cJSON.h"
 
-int cons = 1;
-int prod = 1;
+int cons = 0;
+int prod = 0;
 
 #endif
