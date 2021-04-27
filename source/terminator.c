@@ -131,16 +131,16 @@ int main(int argc, char **argv)
     printf("Consumidores eliminados por llave %f\n",
            cJSON_GetNumberValue(
                cJSON_GetObjectItem(json, "cons_key")));
-    printf("Tiempo esperando total %i\n",
+    printf("Tiempo esperando total %f\n",
            cJSON_GetNumberValue(
                cJSON_GetObjectItem(json, "wait_t")));
-    printf("Tiempo bloqueado total %i\n",
+    printf("Tiempo bloqueado total %f\n",
            cJSON_GetNumberValue(
                cJSON_GetObjectItem(json, "block_t")));
-    printf("Tiempo de usuario total %i\n",
+    printf("Tiempo de usuario total %f\n",
            cJSON_GetNumberValue(
                cJSON_GetObjectItem(json, "user_t")));
-    printf("Tiempo de kernel total %i\n",
+    printf("Tiempo de kernel total %f\n",
            cJSON_GetNumberValue(
                cJSON_GetObjectItem(json, "kernel_t")));
 
