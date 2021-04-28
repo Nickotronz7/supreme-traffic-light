@@ -1,5 +1,10 @@
 #include "../headers/poisson.h"
-
+//=-------------------------------------------------------------------------=
+//=  Author: Ken Christensen                                                =
+//=          University of South Florida                                    =
+//=          WWW: http://www.csee.usf.edu/~christen                         =
+//=          Email: christen@csee.usf.edu                                   =
+//=-------------------------------------------------------------------------=
 //declare functions
 double funUniformSingle();           //generate uniform random variables on (0,1)
 int funPoissonSingle(double lambda); //generate Poisson variables with parameter (ie mean) lambda
